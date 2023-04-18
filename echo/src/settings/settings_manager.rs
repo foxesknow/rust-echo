@@ -7,7 +7,7 @@ use crate::settings::providers::*;
 
 type SettingsHashSet = HashMap<String, Box<dyn Settings>>;
 
-fn get_settings_hashset() -> &'static mut SettingsHashSet
+fn get_settings_manager() -> &'static mut SettingsHashSet
 {
     static ONCE: Once = Once::new();
     static mut ALL_SETTINGS: MaybeUninit<SettingsHashSet> = MaybeUninit::uninit();
@@ -29,8 +29,8 @@ fn get_settings_hashset() -> &'static mut SettingsHashSet
 
 pub fn get_setting(namespace: &str, setting: &str) -> Option<String>
 {
-    let settings = get_settings_hashset();
-    let namespace_manager = settings.get_mut(&namespace.to_lowercase());
+    let settings_manager = get_settings_manager();
+    let namespace_manager = settings_manager.get_mut(&namespace.to_lowercase());
 
     if namespace_manager.is_some()
     {
@@ -41,6 +41,12 @@ pub fn get_setting(namespace: &str, setting: &str) -> Option<String>
     {
         None    
     }
+}
+
+pub fn register_settings(namespace: &str, settings : Box<dyn Settings>)
+{
+    let settings_manager = get_settings_manager();
+    settings_manager.insert(namespace.to_string(), settings);
 }
 
 
