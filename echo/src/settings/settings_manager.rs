@@ -7,6 +7,13 @@ use crate::settings::providers::*;
 
 type SettingsHashSet = HashMap<String, Box<dyn Settings>>;
 
+#[non_exhaustive]
+#[derive(Debug)]
+pub enum SettingError
+{
+    InvalidFormat,
+}
+
 struct SettingsManager
 {
     settings: SettingsHashSet,
@@ -87,14 +94,14 @@ pub fn is_registered(namespace: &str) -> bool
     settings_manager.settings.contains_key(namespace)
 }
 
-pub fn crack_qualified_name(name: &str) -> Result<(&str, &str), &'static str>
+pub fn crack_qualified_name(name: &str) -> Result<(&str, &str), SettingError>
 {
     let parts = name.split_once(':');
 
     match parts
     {
         Some((namespace, setting)) => Ok((namespace, setting)),
-        None                       => Err("name not in format namespace:setting")
+        None                       => Err(SettingError::InvalidFormat)
     }
 }
 

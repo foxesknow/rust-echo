@@ -2,12 +2,22 @@ use crate::settings::*;
 
 static TOKEN_PIPE_SEPARATOR: char = '|';
 
-pub fn expand_text(text: &str, begin_token: &str, end_token: &str) -> Result<String, &'static str>
+#[non_exhaustive]
+#[derive(Debug)]
+pub enum ExpansionError
+{
+    NotTerminated,
+    NoVariable,
+    SettingNotFound,
+    UnknownAction(String)
+}
+
+pub fn expand_text(text: &str, begin_token: &str, end_token: &str) -> Result<String, ExpansionError>
 {
     return expand_text_with_lookup(text, begin_token, end_token, None)
 }
 
-pub fn expand_text_with_lookup(text: &str, begin_token: &str, end_token: &str, unknown_variable_lookup : Option<fn(&str) -> Option<String>>) -> Result<String, &'static str>
+pub fn expand_text_with_lookup(text: &str, begin_token: &str, end_token: &str, unknown_variable_lookup : Option<fn(&str) -> Option<String>>) -> Result<String, ExpansionError>
 {
     let mut expanded = String::with_capacity(text.len());
     let mut parse_buffer = text;
@@ -27,7 +37,7 @@ pub fn expand_text_with_lookup(text: &str, begin_token: &str, end_token: &str, u
         }
         else
         {
-            return Err("token not terminated");
+            return Err(ExpansionError::NotTerminated);
         }
     }
 
@@ -37,16 +47,16 @@ pub fn expand_text_with_lookup(text: &str, begin_token: &str, end_token: &str, u
     Ok(expanded)
 }
 
-pub fn expand_token(token: &str) -> Result<String, &'static str>
+pub fn expand_token(token: &str) -> Result<String, ExpansionError>
 {
     expand_token_with_lookup(token, None)
 }
 
-pub fn expand_token_with_lookup(token: &str, unknown_variable_lookup : Option<fn(&str) -> Option<String>>) -> Result<String, &'static str>
+pub fn expand_token_with_lookup(token: &str, unknown_variable_lookup : Option<fn(&str) -> Option<String>>) -> Result<String, ExpansionError>
 {
     let mut parts = token.splitn(2, TOKEN_PIPE_SEPARATOR);
     
-    let variable = parts.next().ok_or("no variable")?;
+    let variable = parts.next().ok_or(ExpansionError::NoVariable)?;
     let action = parts.next();
     
     let (namespace, setting) = extract_namespace_and_setting(variable);
@@ -66,17 +76,18 @@ pub fn expand_token_with_lookup(token: &str, unknown_variable_lookup : Option<fn
 
     if value.is_none() 
     {
-        return Err("setting not found");
+        return Err(ExpansionError::SettingNotFound);
     }
 
     let result = match action
     {
-        Some("trim") => value.unwrap().trim().to_string(),
-        Some("trim_end") => value.unwrap().trim_end().to_string(),
-        Some("trim_start") => value.unwrap().trim_start().to_string(),
-        Some("to_upper") => value.unwrap().to_uppercase().to_string(),
-        Some("to_lower") => value.unwrap().to_lowercase().to_string(),
-        _ => value.unwrap()
+        Some("trim")        => value.unwrap().trim().to_string(),
+        Some("trim_end")    => value.unwrap().trim_end().to_string(),
+        Some("trim_start")  => value.unwrap().trim_start().to_string(),
+        Some("to_upper")    => value.unwrap().to_uppercase().to_string(),
+        Some("to_lower")    => value.unwrap().to_lowercase().to_string(),
+        Some(x)             => return Err(ExpansionError::UnknownAction(x.to_string())),
+        _                   => value.unwrap()
     };
 
     Ok(result)
@@ -110,42 +121,42 @@ mod tests {
     }
 
     #[test]
-    fn test_literal() -> Result<(), String>
+    fn test_literal() -> Result<(), ExpansionError>
     {
         assert_eq!(expand_token("literal:hello")?, "hello".to_string());
         Ok(())
     }
 
     #[test]
-    fn test_literal_to_upper() -> Result<(), String>
+    fn test_literal_to_upper() -> Result<(), ExpansionError>
     {
         assert_eq!(expand_token("literal:hello|to_upper")?, "HELLO".to_string());
         Ok(())
     }
 
     #[test]
-    fn test_literal_to_lower() -> Result<(), String>
+    fn test_literal_to_lower() -> Result<(), ExpansionError>
     {
         assert_eq!(expand_token("literal:Hello|to_lower")?, "hello".to_string());
         Ok(())
     }
 
     #[test]
-    fn test_expand_text_one_token_1() -> Result<(), String>
+    fn test_expand_text_one_token_1() -> Result<(), ExpansionError>
     {
         assert_eq!(expand_text("hello ${literal:bob}", "${", "}")?, "hello bob".to_string());
         Ok(())
     }
 
     #[test]
-    fn test_expand_text_one_token_2() -> Result<(), String>
+    fn test_expand_text_one_token_2() -> Result<(), ExpansionError>
     {
         assert_eq!(expand_text("AB ${literal:bob} CD", "${", "}")?, "AB bob CD".to_string());
         Ok(())
     }
 
     #[test]
-    fn test_expand_text_two_tokens_1() -> Result<(), String>
+    fn test_expand_text_two_tokens_1() -> Result<(), ExpansionError>
     {
         assert_eq!(expand_text("hello ${literal:Bob} how is ${literal:Jack} doing", "${", "}")?, "hello Bob how is Jack doing".to_string());
         Ok(())
