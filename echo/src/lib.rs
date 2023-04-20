@@ -1,4 +1,5 @@
 pub mod settings;
+pub mod text;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

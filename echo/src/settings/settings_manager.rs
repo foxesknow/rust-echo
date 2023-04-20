@@ -87,6 +87,17 @@ pub fn is_registered(namespace: &str) -> bool
     settings_manager.settings.contains_key(namespace)
 }
 
+pub fn crack_qualified_name(name: &str) -> Result<(&str, &str), &'static str>
+{
+    let parts = name.split_once(':');
+
+    match parts
+    {
+        Some((namespace, setting)) => Ok((namespace, setting)),
+        None                       => Err("name not in format namespace:setting")
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -116,5 +127,20 @@ mod tests {
         assert_eq!(is_registered("island"), true);
         assert_eq!(get_setting("island", "name").unwrap(), "Jack".to_string());
         assert_eq!(get_setting("island", "age").unwrap(), "42".to_string());
+    }
+
+    #[test]
+    fn crack() 
+    {
+        assert!(crack_qualified_name("foo:bar").is_ok());
+        assert_eq!(crack_qualified_name("foo:bar").unwrap(), ("foo", "bar"));
+        assert_eq!(crack_qualified_name("foo:bar:xyz").unwrap(), ("foo", "bar:xyz"));
+    }
+
+    #[test]
+    fn crack_bad_name() 
+    {
+        assert!(crack_qualified_name("foo").is_err());
+        assert!(crack_qualified_name("foo?bar").is_err());
     }
 }
