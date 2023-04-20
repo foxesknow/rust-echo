@@ -1,4 +1,4 @@
-use crate::settings::Settings;
+use crate::settings::*;
 
 use std::sync::atomic::*;
 
@@ -20,12 +20,12 @@ impl CounterSettings
 
 impl Settings for CounterSettings
 {
-    fn get_setting(&mut self, name : &str) -> Option<String>
+    fn get_setting(&mut self, name : &str) -> Result<String, SettingError>
     {
         match name.to_lowercase().as_str()
         {
-            "next" => Some(self.counter.fetch_add(1, Ordering::SeqCst).to_string()),
-            _ => None
+            "next" => Ok(self.counter.fetch_add(1, Ordering::SeqCst).to_string()),
+            _      => Err(SettingError::NotFound)
         }
     }
 }

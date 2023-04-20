@@ -1,4 +1,4 @@
-use crate::settings::Settings;
+use crate::settings::*;
 
 pub struct SingleSettings
 {
@@ -20,15 +20,15 @@ impl SingleSettings
 
 impl Settings for SingleSettings
 {
-    fn get_setting(&mut self, name : &str) -> Option<String>
+    fn get_setting(&mut self, name : &str) -> Result<String, SettingError>
     {
         if self.name == name.to_lowercase()
         {
-            Some(self.value.to_string())
+            Ok(self.value.to_string())
         }
         else
         {
-            None
+            Err(SettingError::NotFound)
         }
     }
 }

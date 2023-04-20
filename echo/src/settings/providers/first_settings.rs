@@ -1,5 +1,4 @@
-use crate::settings::Settings;
-use crate::settings::settings_manager;
+use crate::settings::*;
 use crate::text::tokens;
 
 pub struct FirstSettings
@@ -16,7 +15,7 @@ impl FirstSettings
 
 impl Settings for FirstSettings
 {
-    fn get_setting(&mut self, name : &str) -> Option<String>
+    fn get_setting(&mut self, name : &str) -> Result<String, SettingError>
     {
         /*
         let parts = name.split("??");
@@ -26,6 +25,6 @@ impl Settings for FirstSettings
             settings_manager::crack_qualified_name(name)
         }
 */
-        None
+        Err(SettingError::NotFound)
     }
 }

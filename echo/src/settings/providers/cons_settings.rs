@@ -1,4 +1,4 @@
-use crate::settings::Settings;
+use crate::settings::*;
 
 pub struct ConsSettings
 {
@@ -20,12 +20,12 @@ impl ConsSettings
 
 impl Settings for ConsSettings
 {
-    fn get_setting(&mut self, name : &str) -> Option<String>
+    fn get_setting(&mut self, name : &str) -> Result<String, SettingError>
     {
         match self.head.get_setting(name)
         {
-            Some(x) => Some(x),
-            _        => self.tail.get_setting(name)
+            Ok(x) => Ok(x),
+            _     => self.tail.get_setting(name)
         }
     }
 }

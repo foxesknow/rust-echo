@@ -8,8 +8,8 @@ pub enum ExpansionError
 {
     NotTerminated,
     NoVariable,
-    SettingNotFound,
-    UnknownAction(String)
+    UnknownAction(String),
+    Setting(SettingError)
 }
 
 pub fn expand_text(text: &str, begin_token: &str, end_token: &str) -> Result<String, ExpansionError>
@@ -17,7 +17,7 @@ pub fn expand_text(text: &str, begin_token: &str, end_token: &str) -> Result<Str
     return expand_text_with_lookup(text, begin_token, end_token, None)
 }
 
-pub fn expand_text_with_lookup(text: &str, begin_token: &str, end_token: &str, unknown_variable_lookup : Option<fn(&str) -> Option<String>>) -> Result<String, ExpansionError>
+pub fn expand_text_with_lookup(text: &str, begin_token: &str, end_token: &str, unknown_variable_lookup : Option<fn(&str) -> Result<String, SettingError>>) -> Result<String, ExpansionError>
 {
     let mut expanded = String::with_capacity(text.len());
     let mut parse_buffer = text;
@@ -52,7 +52,7 @@ pub fn expand_token(token: &str) -> Result<String, ExpansionError>
     expand_token_with_lookup(token, None)
 }
 
-pub fn expand_token_with_lookup(token: &str, unknown_variable_lookup : Option<fn(&str) -> Option<String>>) -> Result<String, ExpansionError>
+pub fn expand_token_with_lookup(token: &str, unknown_variable_lookup : Option<fn(&str) -> Result<String, SettingError>>) -> Result<String, ExpansionError>
 {
     let mut parts = token.splitn(2, TOKEN_PIPE_SEPARATOR);
     
@@ -70,13 +70,13 @@ pub fn expand_token_with_lookup(token: &str, unknown_variable_lookup : Option<fn
         match unknown_variable_lookup
         {
             Some(function) => function(variable),
-            None => None
+            None => Err(SettingError::NotFound)
         }
     };
 
-    if value.is_none() 
+    if value.is_err() 
     {
-        return Err(ExpansionError::SettingNotFound);
+        return Err(ExpansionError::Setting(value.unwrap_err()));
     }
 
     let result = match action

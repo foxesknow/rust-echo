@@ -2,17 +2,10 @@ use std::collections::*;
 use std::sync::*;
 use std::mem::MaybeUninit;
 
-use crate::settings::Settings;
+use crate::settings::*;
 use crate::settings::providers::*;
 
 type SettingsHashSet = HashMap<String, Box<dyn Settings>>;
-
-#[non_exhaustive]
-#[derive(Debug)]
-pub enum SettingError
-{
-    InvalidFormat,
-}
 
 struct SettingsManager
 {
@@ -52,7 +45,7 @@ fn get_settings_manager() -> &'static mut SettingsManager
     }
 }
 
-pub fn get_setting(namespace: &str, setting: &str) -> Option<String>
+pub fn get_setting(namespace: &str, setting: &str) -> Result<String, SettingError>
 {
     let settings_manager = get_settings_manager();
     let _lock = settings_manager.lock.lock().unwrap();
@@ -63,7 +56,7 @@ pub fn get_setting(namespace: &str, setting: &str) -> Option<String>
     }
     else 
     {
-        None    
+        Err(SettingError::NotFound)    
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::settings::Settings;
+use crate::settings::*;
 
 pub struct LiteralSettings
 {
@@ -14,8 +14,8 @@ impl LiteralSettings
 
 impl Settings for LiteralSettings
 {
-    fn get_setting(&mut self, name : &str) -> Option<String>
+    fn get_setting(&mut self, name : &str) -> Result<String, SettingError>
     {
-        Some(name.to_string())
+        Ok(name.to_string())
     }
 }

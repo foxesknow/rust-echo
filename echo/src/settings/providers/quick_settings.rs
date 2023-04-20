@@ -1,6 +1,6 @@
 use std::collections::*;
 
-use crate::settings::Settings;
+use crate::settings::*;
 
 pub struct QuickSettings
 {
@@ -30,15 +30,15 @@ impl QuickSettings
 
 impl Settings for QuickSettings
 {
-    fn get_setting(&mut self, name : &str) -> Option<String>
+    fn get_setting(&mut self, name : &str) -> Result<String, SettingError>
     {
         let key = name.to_lowercase();
         let value = self.values.get(&key);
 
         match value
         {
-            Some(&ref x) => Some(x.to_string()),
-            _            => None
+            Some(&ref x) => Ok(x.to_string()),
+            _            => Err(SettingError::NotFound)
         }        
     }
 }
