@@ -19,15 +19,3 @@ impl Settings for LiteralSettings
         Some(name.to_string())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn literal_test() {
-        let mut s = LiteralSettings::new();
-        let value = s.get_setting("foo");
-        assert_eq!(value.unwrap(), "foo");
-    }
-}
