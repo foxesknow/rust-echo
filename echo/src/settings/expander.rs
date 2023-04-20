@@ -2,22 +2,12 @@ use crate::settings::*;
 
 static TOKEN_PIPE_SEPARATOR: char = '|';
 
-#[non_exhaustive]
-#[derive(Debug)]
-pub enum ExpansionError
-{
-    NotTerminated,
-    NoVariable,
-    UnknownAction(String),
-    Setting(SettingError)
-}
-
-pub fn expand_text(text: &str, begin_token: &str, end_token: &str) -> Result<String, ExpansionError>
+pub fn expand_text(text: &str, begin_token: &str, end_token: &str) -> Result<String, SettingError>
 {
     return expand_text_with_lookup(text, begin_token, end_token, None)
 }
 
-pub fn expand_text_with_lookup(text: &str, begin_token: &str, end_token: &str, unknown_variable_lookup : Option<fn(&str) -> Result<String, SettingError>>) -> Result<String, ExpansionError>
+pub fn expand_text_with_lookup(text: &str, begin_token: &str, end_token: &str, unknown_variable_lookup : Option<fn(&str) -> Result<String, SettingError>>) -> Result<String, SettingError>
 {
     let mut expanded = String::with_capacity(text.len());
     let mut parse_buffer = text;
@@ -37,7 +27,7 @@ pub fn expand_text_with_lookup(text: &str, begin_token: &str, end_token: &str, u
         }
         else
         {
-            return Err(ExpansionError::NotTerminated);
+            return Err(SettingError::NotTerminated);
         }
     }
 
@@ -47,16 +37,16 @@ pub fn expand_text_with_lookup(text: &str, begin_token: &str, end_token: &str, u
     Ok(expanded)
 }
 
-pub fn expand_token(token: &str) -> Result<String, ExpansionError>
+pub fn expand_token(token: &str) -> Result<String, SettingError>
 {
     expand_token_with_lookup(token, None)
 }
 
-pub fn expand_token_with_lookup(token: &str, unknown_variable_lookup : Option<fn(&str) -> Result<String, SettingError>>) -> Result<String, ExpansionError>
+pub fn expand_token_with_lookup(token: &str, unknown_variable_lookup : Option<fn(&str) -> Result<String, SettingError>>) -> Result<String, SettingError>
 {
     let mut parts = token.splitn(2, TOKEN_PIPE_SEPARATOR);
     
-    let variable = parts.next().ok_or(ExpansionError::NoVariable)?;
+    let variable = parts.next().ok_or(SettingError::NotFound)?;
     let action = parts.next();
     
     let (namespace, setting) = extract_namespace_and_setting(variable);
@@ -76,7 +66,7 @@ pub fn expand_token_with_lookup(token: &str, unknown_variable_lookup : Option<fn
 
     if value.is_err() 
     {
-        return Err(ExpansionError::Setting(value.unwrap_err()));
+        return value;
     }
 
     let result = match action
@@ -86,7 +76,7 @@ pub fn expand_token_with_lookup(token: &str, unknown_variable_lookup : Option<fn
         Some("trim_start")  => value.unwrap().trim_start().to_string(),
         Some("to_upper")    => value.unwrap().to_uppercase().to_string(),
         Some("to_lower")    => value.unwrap().to_lowercase().to_string(),
-        Some(x)             => return Err(ExpansionError::UnknownAction(x.to_string())),
+        Some(x)             => return Err(SettingError::UnknownAction(x.to_string())),
         _                   => value.unwrap()
     };
 
