@@ -1,13 +1,17 @@
-mod literal;
-mod counter;
-mod quick;
-mod cons;
-mod single;
-mod first;
+mod cons_settings;
+pub use cons_settings::*;
 
-pub use self::literal::LiteralSettings;
-pub use self::counter::CounterSettings;
-pub use self::quick::QuickSettings;
-pub use self::cons::ConsSettings;
-pub use self::single::SingleSettings;
-pub use self::first::FirstSettings;
+mod counter_settings;
+pub use counter_settings::*;
+
+mod first_settings;
+pub use first_settings::*;
+
+mod literal_settings;
+pub use self::literal_settings::*;
+
+mod quick_settings;
+pub use self::quick_settings::*;
+
+mod single_settings;
+pub use self:: single_settings::*;
