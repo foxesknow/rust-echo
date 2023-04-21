@@ -37,6 +37,7 @@ fn get_settings_manager() -> &'static mut SettingsManager
             let mut settings_manager = SettingsManager::new();
             settings_manager.settings.insert("literal".to_string(), Box::new(LiteralSettings::new()));
             settings_manager.settings.insert("counter".to_string(), Box::new(CounterSettings::new()));
+            settings_manager.settings.insert("proc".to_string(), Box::new(ProcessSettings::new()));
 
             ALL_SETTINGS.write(settings_manager);
         });

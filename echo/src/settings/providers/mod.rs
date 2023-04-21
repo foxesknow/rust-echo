@@ -10,6 +10,9 @@ pub use first_settings::*;
 mod literal_settings;
 pub use self::literal_settings::*;
 
+mod process_settings;
+pub use self::process_settings::*;
+
 mod quick_settings;
 pub use self::quick_settings::*;
 
